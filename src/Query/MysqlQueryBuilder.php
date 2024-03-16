@@ -157,6 +157,10 @@ trait MysqlQueryBuilder
      */
     public function regexp($value)
     {
+        if (!$this->db->isMariaDb() && version_compare($this->db->getVersion(), '8.0.4', '>=')) {
+            return ' REGEXP ' . str_replace(['[[:<:]]', '[[:>:]]'], '\\b', $value);
+        }
+
         return ' REGEXP ' . $value;
     }
 
