@@ -161,6 +161,36 @@ trait MysqlQueryBuilder
     }
 
     /**
+     * Surround a regular expression pattern by patterns for word borders.
+     *
+     * Usage:
+     * $query->where('field ' . $query->regexp($query->regexpWord($search)));
+     *
+     * @param   string  $value  The regex pattern to be surrounded by word borders.
+     *
+     * @return  string
+     *
+     * @since   __DEPLOY_VERSION__
+     *
+     * @todo  Remove this method when the database version requirements have been raised
+     *        to >= 8.0.4 for MySQL and >= 10.0.5 for MariaDB so PCRE and ICU compatible
+     *        patterns can be used in any case.
+     */
+    public function regexpWord($value)
+    {
+        // On MariaDB >= 10.0.5 and MySQL >= 8.0.4 use parent method with PCRE and ICU patterns.
+        if (
+            $this->db->isMariaDb() && version_compare($this->db->getVersion(), '10.0.5', '>=')
+            || !$this->db->isMariaDb() && version_compare($this->db->getVersion(), '8.0.4', '>=')
+        ) {
+            return parent::regexpWord($value);
+        }
+
+        // On MariaDB < 10.0.5 and MySQL < 8.0.4 use Henry Spencer library patterns.
+        return '[[:<:]]' . $value . '[[:>:]]';
+    }
+
+    /**
      * Get the function to return a random floating-point value
      *
      * Usage:

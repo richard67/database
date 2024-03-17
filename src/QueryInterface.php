@@ -487,6 +487,20 @@ interface QueryInterface extends PreparableInterface, LimitableInterface
     public function regexp($value);
 
     /**
+     * Surround a regular expression pattern by patterns for word borders.
+     *
+     * Usage:
+     * $query->where('field ' . $query->regexp($query->regexpWord($search)));
+     *
+     * @param   string  $value  The regex pattern to be surrounded by word borders.
+     *
+     * @return  string
+     *
+     * @since   __DEPLOY_VERSION__
+     */
+    public function regexpWord($value);
+
+    /**
      * Add a single column, or array of columns to the SELECT clause of the query.
      *
      * Usage:
