@@ -272,4 +272,15 @@ class PgsqlQueryTest extends TestCase
             $this->query->regexp('foo')
         );
     }
+
+    /**
+     * @testdox  A regular expression pattern is surrounded by patterns for word borders
+     */
+    public function testRegexpWord()
+    {
+        $this->assertSame(
+            '[[:<:]]foo[[:>:]]',
+            $this->query->regexpWord('foo')
+        );
+    }
 }

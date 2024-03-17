@@ -130,6 +130,64 @@ class MysqlQueryTest extends TestCase
     }
 
     /**
+     * @testdox  A regular expression pattern is surrounded by patterns for word borders
+     *
+     * @todo  Remove this method when the database version requirements have been raised
+     *        to >= 8.0.4 for MySQL and >= 10.0.5 for MariaDB so border "\\b" is used in
+     *        any case.
+     */
+    public function testRegexpWord()
+    {
+        $this->db->expects($this->any())
+            ->method('isMariaDb')
+            ->willReturn(false);
+
+        $this->db->expects($this->any())
+            ->method('getVersion')
+            ->willReturn('8.0.3');
+
+        $this->assertSame(
+            '[[:<:]]foo[[:>:]]',
+            $this->query->regexpWord('foo'),
+            'On MySQL 8.0.3 word borders "[[:<:]]" and "[[:>:]]" are used'
+        );
+
+        $this->db->expects($this->any())
+            ->method('getVersion')
+            ->willReturn('8.0.4');
+
+        $this->assertSame(
+            '\\bfoo\\b',
+            $this->query->regexpWord('foo'),
+            'On MySQL 8.0.4 word border "\\b" is used'
+        );
+
+        $this->db->expects($this->any())
+            ->method('isMariaDb')
+            ->willReturn(true);
+
+        $this->db->expects($this->any())
+            ->method('getVersion')
+            ->willReturn('10.0.4');
+
+        $this->assertSame(
+            '[[:<:]]foo[[:>:]]',
+            $this->query->regexpWord('foo'),
+            'On MariaDb 10.0.4 word borders "[[:<:]]" and "[[:>:]]" are used'
+        );
+
+        $this->db->expects($this->any())
+            ->method('getVersion')
+            ->willReturn('10.0.5');
+
+        $this->assertSame(
+            '\\bfoo\\b',
+            $this->query->regexpWord('foo'),
+            'On MariaDb 10.0.5 word border "\\b" is used'
+        );
+    }
+
+    /**
      * @testdox  A string is cast as a character string for the driver
      */
     public function testCastAsWithChar()

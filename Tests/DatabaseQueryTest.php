@@ -736,6 +736,17 @@ class DatabaseQueryTest extends TestCase
     }
 
     /**
+     * @testdox  A regular expression pattern is surrounded by patterns for word borders
+     */
+    public function testRegexpWord()
+    {
+        $this->assertSame(
+            '\\bfoo\\b',
+            $this->query->regexpWord('foo')
+        );
+    }
+
+    /**
      * @testdox  The select method correctly creates and manages a SELECT query element
      */
     public function testSelect()
