@@ -7,6 +7,7 @@
 namespace Joomla\Database\Tests\Mysqli;
 
 use Joomla\Database\DatabaseInterface;
+use Joomla\Database\Mysqli\MysqliDriver;
 use Joomla\Database\Mysqli\MysqliQuery;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -130,60 +131,51 @@ class MysqliQueryTest extends TestCase
     }
 
     /**
-     * @testdox  A regular expression pattern is surrounded by patterns for word borders
+     * Data provider for concatenate test cases
+     *
+     * @return  \Generator
      *
      * @todo  Remove this method when the database version requirements have been raised
      *        to >= 8.0.4 for MySQL and >= 10.0.5 for MariaDB so border "\\b" is used in
      *        any case.
      */
-    public function testRegexpWord()
+    public function dataRegexpWord(): \Generator
     {
-        $this->db->expects($this->any())
+        yield 'On MySQL 8.0.3 word borders "[[:<:]]" and "[[:>:]]" are used' => [false, '8.0.3', '[[:<:]]foo[[:>:]]'];
+        yield 'On MariaDb 10.0.4 word borders "[[:<:]]" and "[[:>:]]" are used' => [true, '10.0.4', '[[:<:]]foo[[:>:]]'];
+        yield 'On MySQL 8.0.4 word border "\\b" is used' => [false, '8.0.4', '\\bfoo\\b'];
+        yield 'On MariaDb 10.0.5 word border "\\b" is used' => [true, '10.0.5', '\\bfoo\\b'];
+    }
+
+    /**
+     * @testdox  A regular expression pattern is surrounded by patterns for word borders
+     *
+     * @param   boolean      $isMariaDb  The result of the database driver's isMariaDb() method.
+     * @param   string       $dbVersion  The result of the database driver's getVersion() method.
+     * @param   string       $expected   The expected query string.
+     *
+     * @dataProvider  dataRegexpWord
+     *
+     * @todo  Remove this method when the database version requirements have been raised
+     *        to >= 8.0.4 for MySQL and >= 10.0.5 for MariaDB so border "\\b" is used in
+     *        any case.
+     */
+    public function testRegexpWord(bool $isMariaDb, string $dbVersion, string $expected)
+    {
+        $db    = $this->createMock(MysqliDriver::class);
+        $query = new MysqliQuery($db);
+
+        $db->expects($this->any())
             ->method('isMariaDb')
-            ->willReturn(false);
+            ->willReturn($isMariaDb);
 
-        $this->db->expects($this->any())
+        $db->expects($this->any())
             ->method('getVersion')
-            ->willReturn('8.0.3');
+            ->willReturn($dbVersion);
 
         $this->assertSame(
-            '[[:<:]]foo[[:>:]]',
-            $this->query->regexpWord('foo'),
-            'On MySQL 8.0.3 word borders "[[:<:]]" and "[[:>:]]" are used'
-        );
-
-        $this->db->expects($this->any())
-            ->method('getVersion')
-            ->willReturn('8.0.4');
-
-        $this->assertSame(
-            '\\bfoo\\b',
-            $this->query->regexpWord('foo'),
-            'On MySQL 8.0.4 word border "\\b" is used'
-        );
-
-        $this->db->expects($this->any())
-            ->method('isMariaDb')
-            ->willReturn(true);
-
-        $this->db->expects($this->any())
-            ->method('getVersion')
-            ->willReturn('10.0.4');
-
-        $this->assertSame(
-            '[[:<:]]foo[[:>:]]',
-            $this->query->regexpWord('foo'),
-            'On MariaDb 10.0.4 word borders "[[:<:]]" and "[[:>:]]" are used'
-        );
-
-        $this->db->expects($this->any())
-            ->method('getVersion')
-            ->willReturn('10.0.5');
-
-        $this->assertSame(
-            '\\bfoo\\b',
-            $this->query->regexpWord('foo'),
-            'On MariaDb 10.0.5 word border "\\b" is used'
+            $expected,
+            $query->regexpWord('foo')
         );
     }
 
