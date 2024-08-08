@@ -1609,6 +1609,19 @@ abstract class DatabaseDriver implements DatabaseInterface, DispatcherAwareInter
         return implode('.', $parts);
     }
 
+   /**
+     * Tell whether the database engine uses Perl Compatible Regular Expressions (PCRE)
+     * or Henry Spencer regular expressions.
+     *
+     * @return  boolean  True if the database engine uses PCRE, false if Henry Spencer regular expressions.
+     *
+     * @since   __DEPLOY_VERSION__
+     */
+    public function regexpPcre(): bool
+    {
+        return false;
+    }
+
     /**
      * This function replaces a string identifier with the configured table prefix.
      *

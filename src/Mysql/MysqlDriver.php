@@ -65,7 +65,19 @@ class MysqlDriver extends PdoDriver implements UTF8MB4SupportInterface
     protected $mariadb = false;
 
     /**
-     * The minimum supported database version.
+     * True if the database engine uses Perl Compatible Regular Expressions (PCRE),
+     * false if it uses Henry Spencer regular expressions.
+     *
+     * @var    boolean
+     * @since  __DEPLOY_VERSION__
+     *
+     * @todo  Remove this property when the database version requirements have been raised
+     *        to MySQL >= 8.0.4 and MariaDB >= 10.0.5.
+     */
+    protected $regexpPcre = false;
+
+    /**
+     * The minimum supported MySQL database version.
      *
      * @var    string
      * @since  1.0
@@ -199,6 +211,15 @@ class MysqlDriver extends PdoDriver implements UTF8MB4SupportInterface
         $serverVersion = $this->getVersion();
 
         $this->mariadb = stripos($serverVersion, 'mariadb') !== false;
+
+        /*
+         * Perl Compatible Regular Expressions (PCRE) syntax is used on MariaDB >= 10.0.5 and MySQL >= 8.0.4
+         *
+         * @todo  Remove when the version requirements have been raised to these versions or higher.
+         */
+        $this->regexpPcre
+            = $this->mariadb && version_compare($serverVersion, '10.0.5', '>=')
+            || !$this->mariadb && version_compare($serverVersion, '8.0.4', '>=');
 
         if ($this->utf8mb4) {
             // At this point we know the client supports utf8mb4.  Now we must check if the server supports utf8mb4 as well.
@@ -564,6 +585,26 @@ class MysqlDriver extends PdoDriver implements UTF8MB4SupportInterface
         $this->connect();
 
         return $this->mariadb;
+    }
+
+   /**
+     * Tell whether the database engine uses Perl Compatible Regular Expressions (PCRE)
+     * or Henry Spencer regular expressions.
+     *
+     * @return  boolean  True if the database engine uses PCRE, false if Henry Spencer regular expressions.
+     *
+     * @since   __DEPLOY_VERSION__
+     *
+     * @todo  Change this method to return true when the database version requirements have been raised
+     *        to MySQL >= 8.0.4 and MariaDB >= 10.0.5.
+     */
+    public function regexpPcre(): bool
+    {
+        // @todo  Remove when the version requirements have been raised to MySQL >= 8.0.4 and MariaDB >= 10.0.5.
+        $this->connect();
+
+        // @todo  Return true when the version requirements have been raised to MySQL >= 8.0.4 and MariaDB >= 10.0.5.
+        return $this->regexpPcre;
     }
 
     /**

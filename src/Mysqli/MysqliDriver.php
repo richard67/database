@@ -79,6 +79,18 @@ class MysqliDriver extends DatabaseDriver implements UTF8MB4SupportInterface
     protected $mariadb = false;
 
     /**
+     * True if the database engine uses Perl Compatible Regular Expressions (PCRE),
+     * false if it uses Henry Spencer regular expressions.
+     *
+     * @var    boolean
+     * @since  __DEPLOY_VERSION__
+     *
+     * @todo  Remove this property when the database version requirements have been raised
+     *        to MySQL >= 8.0.4 and MariaDB >= 10.0.5.
+     */
+    protected $regexpPcre = false;
+
+    /**
      * The minimum supported MySQL database version.
      *
      * @var    string
@@ -312,9 +324,20 @@ class MysqliDriver extends DatabaseDriver implements UTF8MB4SupportInterface
             $this->select($this->options['database']);
         }
 
-        $this->mariadb = stripos($this->connection->server_info, 'mariadb') !== false;
+        $serverVersion = $this->getVersion();
 
-        $this->utf8mb4 = $this->serverClaimsUtf8mb4Support();
+        $this->mariadb = stripos($serverVersion, 'mariadb') !== false;
+
+        /*
+         * Perl Compatible Regular Expressions (PCRE) syntax is used on MariaDB >= 10.0.5 and MySQL >= 8.0.4
+         *
+         * @todo  Remove when the version requirements have been raised to these versions or higher.
+         */
+        $this->regexpPcre
+            = $this->mariadb && version_compare($serverVersion, '10.0.5', '>=')
+            || !$this->mariadb && version_compare($serverVersion, '8.0.4', '>=');
+
+        $this->utf8mb4 = $this->serverClaimsUtf8mb4Support($serverVersion);
 
         // Set character sets (needed for MySQL 4.1.2+ and MariaDB).
         $this->utf = $this->setUtf();
@@ -692,6 +715,26 @@ class MysqliDriver extends DatabaseDriver implements UTF8MB4SupportInterface
         return $this->mariadb;
     }
 
+   /**
+     * Tell whether the database engine uses Perl Compatible Regular Expressions (PCRE)
+     * or Henry Spencer regular expressions.
+     *
+     * @return  boolean  True if the database engine uses PCRE, false if Henry Spencer regular expressions.
+     *
+     * @since   __DEPLOY_VERSION__
+     *
+     * @todo  Change this method to return true when the database version requirements have been raised
+     *        to MySQL >= 8.0.4 and MariaDB >= 10.0.5.
+     */
+    public function regexpPcre(): bool
+    {
+        // @todo  Remove when the version requirements have been raised to MySQL >= 8.0.4 and MariaDB >= 10.0.5.
+        $this->connect();
+
+        // @todo  Return true when the version requirements have been raised to MySQL >= 8.0.4 and MariaDB >= 10.0.5.
+        return $this->regexpPcre;
+    }
+
     /**
      * Method to get the auto-incremented value from the last INSERT statement.
      *
@@ -1040,20 +1083,21 @@ class MysqliDriver extends DatabaseDriver implements UTF8MB4SupportInterface
      *
      * libmysql supports utf8mb4 since 5.5.3 (same version as the MySQL server). mysqlnd supports utf8mb4 since 5.0.9.
      *
+     * @param   string  $serverVersion  The database connector version as returned by the getVersion() method.
+     *
      * @return  boolean
      *
      * @since   1.4.0
      */
-    private function serverClaimsUtf8mb4Support()
+    private function serverClaimsUtf8mb4Support($serverVersion)
     {
         $client_version = mysqli_get_client_info();
-        $server_version = $this->getVersion();
 
-        if (version_compare($server_version, '5.5.3', '<')) {
+        if (version_compare($serverVersion, '5.5.3', '<')) {
             return false;
         }
 
-        if ($this->mariadb && version_compare($server_version, '10.0.0', '<')) {
+        if ($this->mariadb && version_compare($serverVersion, '10.0.0', '<')) {
             return false;
         }
 
