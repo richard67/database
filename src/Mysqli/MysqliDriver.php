@@ -596,9 +596,9 @@ class MysqliDriver extends DatabaseDriver implements UTF8MB4SupportInterface
     }
 
     /**
-     * Get the version of the database connector.
+     * Get the version of the database server.
      *
-     * @return  string  The database connector version.
+     * @return  string  The database server version.
      *
      * @since   1.0
      */
