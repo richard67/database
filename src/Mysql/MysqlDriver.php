@@ -204,15 +204,9 @@ class MysqlDriver extends PdoDriver implements UTF8MB4SupportInterface
             parent::connect();
         }
 
-        // Get database server version
-        $this->serverVersion = $this->setQuery('SELECT version();')->loadResult();
+        $serverVersion = $this->getVersion();
 
-        $this->mariadb = stripos($this->serverVersion, 'mariadb') !== false;
-
-        if ($this->mariadb) {
-            // MariaDB: Strip off any leading '5.5.5-', if present
-            $this->serverVersion = preg_replace('/^5\.5\.5-/', '', $this->serverVersion);
-        }
+        $this->mariadb = stripos($serverVersion, 'mariadb') !== false;
 
         if ($this->utf8mb4) {
             // At this point we know the client supports utf8mb4.  Now we must check if the server supports utf8mb4 as well.
@@ -513,7 +507,16 @@ class MysqlDriver extends PdoDriver implements UTF8MB4SupportInterface
      */
     public function getVersion()
     {
-        $this->connect();
+        if (!isset($this->serverVersion)) {
+            $this->connect();
+
+            $this->serverVersion = $this->setQuery('SELECT @@version;')->loadResult();
+
+            if (stripos($this->serverVersion, 'mariadb') !== false) {
+                // MariaDB: Strip off any leading '5.5.5-', if present
+                $this->serverVersion = preg_replace('/^5\.5\.5-/', '', $this->serverVersion);
+            }
+        }
 
         return $this->serverVersion;
     }
