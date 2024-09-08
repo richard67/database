@@ -210,9 +210,9 @@ class MysqlDriver extends PdoDriver implements UTF8MB4SupportInterface
 
         if ($this->utf8mb4) {
             // At this point we know the client supports utf8mb4.  Now we must check if the server supports utf8mb4 as well.
-            $this->utf8mb4 = version_compare($this->serverVersion, '5.5.3', '>=');
+            $this->utf8mb4 = version_compare($serverVersion, '5.5.3', '>=');
 
-            if ($this->mariadb && version_compare($this->serverVersion, '10.0.0', '<')) {
+            if ($this->mariadb && version_compare($serverVersion, '10.0.0', '<')) {
                 $this->utf8mb4 = false;
             }
 
