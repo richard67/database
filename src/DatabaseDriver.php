@@ -1926,7 +1926,7 @@ abstract class DatabaseDriver implements DatabaseInterface, DispatcherAwareInter
             }
         } elseif (preg_match('/^(?P<host>\[.*\])(:(?P<port>.+))?$/', $this->options['host'], $matches)) {
             // We assume square-bracketed IPv6 address with or without port, e.g. [fe80:102::2%eth1]:3306
-            $options['host'] = $ipv6SquareBrackets ? $matches['host'] : rtrim(ltrim($matches['host'], '['), ']');
+            $this->options['host'] = $ipv6SquareBrackets ? $matches['host'] : rtrim(ltrim($matches['host'], '['), ']');
 
             if (!empty($matches['port'])) {
                 $port = $matches['port'];
